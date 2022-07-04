@@ -114,9 +114,7 @@ class CompositeDataset(IDataset):
     def data(self, length=None):
         source = []
         target = []
-        sum_of_weights = sum(
-            [dataset_and_weight[1] for dataset_and_weight in self.datasets]
-        )
+        sum_of_weights = sum([dataset_and_weight[1] for dataset_and_weight in self.datasets])
         for dataset, weight in self.datasets:
             data = dataset.data(length)
             if length == None:
@@ -145,10 +143,9 @@ class LocalDataset(IDataset):
         """
         source = None
         target = None
+
         with zipfile.ZipFile(filepath, "r") as zip_cache:
-            dir_names = [
-                info.filename for info in zip_cache.infolist() if info.is_dir()
-            ]
+            dir_names = [info.filename for info in zip_cache.infolist() if info.is_dir()]
             assert len(dir_names) > 0
             dir_name = dir_names[0]
             with zip_cache.open(dir_name + "metadata.json") as metadata_file:
@@ -170,9 +167,7 @@ class LocalDataset(IDataset):
         filepath = Path(filepath)
 
     def __str__(self):
-        return (
-            str(self.name).lower() + "-" + str(self.from_code) + "_" + str(self.to_code)
-        )
+        return str(self.name).lower() + "-" + str(self.from_code) + "_" + str(self.to_code)
 
     def load_metadata_from_json(self, metadata):
         """Loads package metadata from a JSON object.
@@ -195,14 +190,14 @@ class LocalDataset(IDataset):
 
 
 class NetworkDataset(IDataset):
-    def __init__(self, metadata):
+    def __init__(self, metadata, local_dataset=None):
         """Creates a NetworkDataset.
 
         Args:
             metadata: A json object from json.load
         """
         self.load_metadata_from_json(metadata)
-        self.local_dataset = None
+        self.local_dataset = local_dataset
 
     def load_metadata_from_json(self, metadata):
         """Loads package metadata from a JSON object.
@@ -219,9 +214,7 @@ class NetworkDataset(IDataset):
         self.reference = metadata.get("reference")
 
     def __str__(self):
-        return (
-            str(self.name).lower() + "-" + str(self.from_code) + "_" + str(self.to_code)
-        )
+        return str(self.name).lower() + "-" + str(self.from_code) + "_" + str(self.to_code)
 
     def filename(self):
         return str(self) + ".argosdata"
@@ -243,7 +236,7 @@ class NetworkDataset(IDataset):
         if not Path(filepath).exists():
             self.download()
         assert zipfile.is_zipfile(filepath)
-        if self.local_dataset == None:
+        if self.local_dataset == None or self.local_dataset == True:
             self.local_dataset = LocalDataset(filepath)
         return self.local_dataset.data(length)
 
@@ -251,7 +244,7 @@ class NetworkDataset(IDataset):
         return len(self.data()[0])
 
 
-def get_available_datasets():
+def get_available_datasets(local_dataset=None):
     """Returns a list of available NetworkDatasets
 
     Returns:
@@ -263,7 +256,7 @@ def get_available_datasets():
     with open(DATA_INDEX) as data_index:
         index = json.load(data_index)
         for metadata in index:
-            dataset = NetworkDataset(metadata)
+            dataset = NetworkDataset(metadata, local_dataset=local_dataset)
             available_datasets.append(dataset)
     return available_datasets
 
@@ -328,9 +321,7 @@ class TransformedDataset(IDataset):
         """
         self.dataset = dataset
         self.transform = transform
-        self.target_transform = (
-            transform if target_transform == None else target_transform
-        )
+        self.target_transform = transform if target_transform == None else target_transform
 
     def data(self, length=None):
         source, target = self.dataset.data(length)
