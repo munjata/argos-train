@@ -133,19 +133,20 @@ with open(Path("run/split_data/all.txt"), "w") as combined:
         for line in tgt:
             combined.write(line)
 
-exit(0)
+
 # TODO: Don't hardcode vocab_size and set user_defined_symbols
 subprocess.run(
     [
         "spm_train",
         "--input=run/split_data/all.txt",
         "--model_prefix=run/sentencepiece",
-        "--vocab_size=50000",
+        "--vocab_size=28512",
         "--character_coverage=0.9995",
         "--input_sentence_size=1000000",
         "--shuffle_input_sentence=true",
     ]
 )
+
 
 subprocess.run(["rm", "run/split_data/all.txt"])
 
@@ -153,7 +154,7 @@ subprocess.run(["onmt_build_vocab", "-config", "config.yml", "-n_sample", "-1"])
 
 subprocess.run(["onmt_train", "-config", "config.yml"])
 
-
+exit(0)
 # Package
 subprocess.run(
     [
