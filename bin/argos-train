@@ -17,25 +17,34 @@ import stanza
 settings.RUN_PATH.mkdir(exist_ok=True)
 settings.CACHE_PATH.mkdir(exist_ok=True)
 
-MAX_DATA_SIZE = 5 * (10 ** 7)
+MAX_DATA_SIZE = 5 * (10**7)
 
 assert not settings.SOURCE_PATH.is_file() and not settings.TARGET_PATH.is_file()
 
-from_code = input("From code (ISO 639): ")
-to_code = input("To code (ISO 639): ")
-from_name = input("From name: ")
-to_name = input("To name: ")
-version = input("Version: ")
+# from_code = input("From code (ISO 639): ")
+# to_code = input("To code (ISO 639): ")
+# from_name = input("From name: ")
+# to_name = input("To name: ")
+# version = input("Version: ")
+# package_version = version
+# argos_version = "1.5"
+
+from_code = "fr"  # input("From code (ISO 639): ")
+to_code = "en"  # input("To code (ISO 639): ")
+from_name = "French"  # input("From name: ")
+to_name = "English"  # input("To name: ")
+version = "0.0.7"  # input("Version: ")
 package_version = version
 argos_version = "1.5"
 
-available_datasets = get_available_datasets()
+local_dataset = True
+print("-------------getting available_datasets ....")
+available_datasets = get_available_datasets(local_dataset)
 
-datasets = list(
-    filter(
-        lambda x: x.from_code == from_code and x.to_code == to_code, available_datasets
-    )
-)
+datasets = list(filter(lambda x: x.from_code == from_code and x.to_code == to_code, available_datasets))
+
+print("--------Found {} datasets ".format(len(datasets)))
+
 
 if len(datasets) == 0:
     # Try to use reverse data
@@ -57,6 +66,8 @@ if len(datasets) == 0:
     else:
         print("No data available for this language pair, check data-index.json")
         sys.exit(1)
+else:
+    print(datasets[0])
 
 # Limit max amount of data used
 limited_datasets = list()
@@ -122,7 +133,7 @@ with open(Path("run/split_data/all.txt"), "w") as combined:
         for line in tgt:
             combined.write(line)
 
-
+exit(0)
 # TODO: Don't hardcode vocab_size and set user_defined_symbols
 subprocess.run(
     [
@@ -187,15 +198,9 @@ while not stanza_model_located:
         stanza_model_located = True
     except:
         print(f"Could not locate stanza model for lang {stanza_lang_code}")
-        print(
-            "Enter the code of a different language to attempt to use its stanza model."
-        )
-        print(
-            "This will work best for with a similar language to the one you are attempting to translate."
-        )
-        print(
-            "This will require manually editing the Stanza package in the finished model to change its code"
-        )
+        print("Enter the code of a different language to attempt to use its stanza model.")
+        print("This will work best for with a similar language to the one you are attempting to translate.")
+        print("This will require manually editing the Stanza package in the finished model to change its code")
         stanza_lang_code = input("Stanza language code (ISO 639): ")
 
 
@@ -204,9 +209,7 @@ subprocess.run(["cp", "-r", "run/stanza", model_path])
 subprocess.run(["cp", "run/metadata.json", model_path])
 subprocess.run(["cp", "run/README.md", model_path])
 
-package_path = (
-    Path("run") / f"translate-{from_code}_{to_code}-{package_version_code}.argosmodel"
-)
+package_path = Path("run") / f"translate-{from_code}_{to_code}-{package_version_code}.argosmodel"
 
 shutil.make_archive(model_dir, "zip", root_dir="run", base_dir=model_dir)
 subprocess.run(["mv", model_dir + ".zip", package_path])
